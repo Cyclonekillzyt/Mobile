@@ -1,22 +1,42 @@
 import type { Request, Response } from "express";
-import { downloadAudio } from "../services/downloadService.js";
+import fs from "fs";
+import { addAudioJob } from "../workers/audioQueue.js";
+import { getCachedFilePath, isFileCached } from "../config/cacheDir.js";
 
 export async function handleDownloadRequest(req: Request, res: Response) {
-  const { url } = req.body;
+  const { videoId, type = "download" } = req.body;
 
-  if (!url) {
-    return res.status(400).json({ message: "URL required" });
+  if (!videoId) {
+    return res.status(400).json({ message: "videoId required" });
   }
 
   try {
-    res.setHeader("Content-Disposition", "attachment; filename=audio.mp3");
-    res.setHeader("Content-Type", "audio/mpeg");
+    const cachedPath = getCachedFilePath(videoId);
 
-    const process = downloadAudio(url);
+    if (isFileCached(videoId)) {
+      console.log(`Cache hit: ${videoId}`);
+      res.setHeader("Content-Disposition", "attachment; filename=audio.mp3");
+      res.setHeader("Content-Type", "audio/mpeg");
 
-    process.stdout.pipe(res);
+      fs.createReadStream(cachedPath).pipe(res);
+      return;
+    }
 
-    process.stderr.on("data", (d) => console.error(d.toString()));
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    console.log(`Cache miss: ${videoId}, adding to queue...`);
+    
+    await addAudioJob(videoId, type, userId);
+
+    res.status(202).json({
+      message: "Download queued",
+      videoId,
+      type,
+    });
   } catch (err) {
     console.error(err);
 

@@ -1,26 +1,62 @@
 import type { Request, Response } from "express";
+import fs from "fs";
+import path from "path";
 import { createAudioStream } from "../services/streamService.js";
+import { getCachedFilePath } from "../config/cacheDir.js";
 
-export function streamAudio(req: Request, res: Response) {
-  const { videoId } = req.query;
+export async function streamAudio(req: Request, res: Response) {
+  const { videoId } = req.query as {videoId?: string};
 
   if (!videoId) {
     return res.status(400).json({ message: "videoId required" });
   }
 
-  res.setHeader("Content-Type", "audio/mpeg");
+  
 
-  const streamProcess = createAudioStream(videoId as string);
+  try {
+    const cachedPath = getCachedFilePath(videoId);
+    const stream = await createAudioStream(videoId)
 
-  streamProcess.stdout.pipe(res);
+    const stat = fs.existsSync(cachedPath) ? fs.statSync(cachedPath) : { size: 0 }
+    const fileSize = stat.size;
 
-  streamProcess.stderr.on("data", (data) => {
-    console.error("yt-dlp error:", data.toString());
-  });
+    const range = req.headers.range;
 
-  streamProcess.on("close", (code) => {
-    if (code !== 0) {
-      console.error(`yt-dlp exited with code ${code}`);
-    }
-  });
-}
+    const ext = path.extname(cachedPath);
+    const mime =
+      ext === ".webm"
+        ? "audio/webm"
+        : ext === ".m4a"
+          ? "audio/mp4"
+          : "audio/ogg";
+
+    
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0] ?? "0", 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const chunkSize = end - start + 1;
+    
+        const chunkStream = fs.createReadStream(cachedPath, { start, end });
+    
+        res.writeHead(206, {
+          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunkSize,
+          "Content-Type": mime,
+        });
+    
+        chunkStream.pipe(res);
+      } else {
+        res.writeHead(200, {
+          "Content-Length": fileSize,
+          "Content-Type": mime,
+        });
+    
+        stream.pipe(res);
+      }
+  } catch (error) {
+     console.error(error);
+    if (!res.headersSent) res.status(500).json({ message: "Internal error" });
+  }
+  }
