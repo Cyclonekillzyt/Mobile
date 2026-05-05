@@ -4,5 +4,5 @@ import { requireAuth } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/search", handleSearchRequest);
+router.get("/search", requireAuth, handleSearchRequest);
 export default router;

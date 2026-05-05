@@ -5,5 +5,5 @@ import { requireAuth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get("/stream", requireAuth, streamAudio);
+router.get("/stream",requireAuth, streamAudio);
 export default router;

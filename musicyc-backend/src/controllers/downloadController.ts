@@ -13,12 +13,15 @@ export async function handleDownloadRequest(req: Request, res: Response) {
   try {
     const cachedPath = getCachedFilePath(videoId);
 
+    console.log(cachedPath, "donwloadControllers");
+
     if (isFileCached(videoId)) {
       console.log(`Cache hit: ${videoId}`);
       res.setHeader("Content-Disposition", "attachment; filename=audio.mp3");
       res.setHeader("Content-Type", "audio/mpeg");
+      if (cachedPath && fs.existsSync(cachedPath))
+        fs.createReadStream(cachedPath).pipe(res);
 
-      fs.createReadStream(cachedPath).pipe(res);
       return;
     }
 
@@ -29,7 +32,7 @@ export async function handleDownloadRequest(req: Request, res: Response) {
     }
 
     console.log(`Cache miss: ${videoId}, adding to queue...`);
-    
+
     await addAudioJob(videoId, type, userId);
 
     res.status(202).json({

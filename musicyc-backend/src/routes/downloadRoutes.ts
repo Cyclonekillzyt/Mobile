@@ -5,5 +5,5 @@ import { checkDownloadQuota } from '../middleware/checkDownloadQuota.js';
 
 const router = express.Router();
 
-router.post("/download", requireAuth, checkDownloadQuota, handleDownloadRequest);
+router.post("/download",requireAuth, checkDownloadQuota, handleDownloadRequest);
 export default router;

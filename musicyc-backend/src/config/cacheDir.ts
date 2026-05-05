@@ -11,8 +11,25 @@ if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
 
-export const getCachedFilePath = (videoId: string) =>
-  path.join(CACHE_DIR, `${videoId}.webm`);
+export const temp = path.join(CACHE_DIR, ".temp");
 
-export const isFileCached = (videoId: string) =>
-  fs.existsSync(getCachedFilePath(videoId));
+
+
+if (!fs.existsSync(temp)) {
+  fs.mkdirSync(temp, { recursive: true });
+}
+
+
+export const getCachedFile = (videoId: string) =>{
+  const files = fs.readdirSync(CACHE_DIR);
+  return files.find((f) => f.startsWith(videoId));
+};
+
+export const getCachedFilePath = (videoId: string) => {
+  const file = getCachedFile(videoId);
+  if (!file) return null;
+  return path.join(CACHE_DIR, file);
+};
+
+export const isFileCached = (videoId: string) => !!getCachedFile(videoId);
+

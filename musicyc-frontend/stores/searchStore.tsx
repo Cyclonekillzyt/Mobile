@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type Song = {
+export type Song = {
   title: string;
   channel: string;
   videoId: string;
@@ -9,12 +9,14 @@ type Song = {
     medium: { url: string };
     high: { url: string };
   };
+  duration: number;
 };
 
 type SearchStore = {
   query: string;
   results: Song[];
-  loading: boolean
+  loading: boolean;
+  
   setQuery: (query: string) => void;
   setResults: (results: Song[]) => void;
   setLoading: (loading: boolean) => void;
@@ -24,10 +26,13 @@ export const useSearchStore = create<SearchStore>((set) => ({
   query: "",
   results: [],
   loading: false,
+  
 
   setQuery: (query) => set({ query }),
 
   setResults: (results) => set({ results }),
-  
-  setLoading: (loading) => set({loading})
+
+  setLoading: (loading) => set({ loading }),
+
+ 
 }));

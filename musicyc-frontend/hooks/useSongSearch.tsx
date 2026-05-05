@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import {  useEffect } from "react";
 import { useSearchStore } from "@/stores/searchStore";
 import { searchSongs } from "@/lib/api/searchApi";
  

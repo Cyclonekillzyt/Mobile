@@ -5,13 +5,21 @@ export const lightTheme = {
   subtext: "#6B7280",
   border: "#E5E7EB",
   primary: "#1DB954",
+  auth: "#FFFFFF",
+  glow: "rgba(0, 209, 255, 0.15)",
+  inputBg: "#F1F5F9",
+  gradient: ["#1DB954", "#00D1FF"],
 };
 
 export const darkTheme = {
-  background: "#0B0F14",
-  card: "#121824", 
-  text: "#E5E7EB", 
-  subtext: "#9CA3AF", 
-  border: "#1F2937", 
-  primary: "#1DB954", 
+  background: "#070B10",
+  card: "#0F1624",
+  text: "#FFFFFF",
+  subtext: "#8FA3BF",
+  border: "rgba(255,255,255,0.08)",
+  primary: "#1DB954",
+  auth: "#17171F",
+  glow: "rgba(0, 209, 255, 0.25)",
+  inputBg: "#2C2C36",
+  gradient: ["#1DB954", "#00D1FF"],
 };
