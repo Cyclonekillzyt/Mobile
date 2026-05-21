@@ -65,12 +65,19 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
-export async function signUp(email: string, password: string) {
+export async function signUp(
+  userName: string,
+  email: string,
+  password: string,
+) {
   console.log("[AUTH] sign up");
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: { userName: userName },
+    },
   });
 
   if (error) {

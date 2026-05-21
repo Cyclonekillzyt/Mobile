@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Keyboard,
+} from "react-native";
 import { signUp } from "@/lib/api/supabase";
 import { useTheme } from "@/hooks/useTheme";
 import { useRouter } from "expo-router";
@@ -7,21 +13,29 @@ import { LinearGradient } from "expo-linear-gradient";
 import { showToast } from "@/utils/toast";
 import PwdVisibility from "@/components/PwdVisibility";
 import { checkPasswordStrength } from "@/utils/passwordStrength";
+import Logo from "@/components/Logo";
+import SocialsBtn from "@/components/SocialsBtn";
+import { useVerificationStore } from "@/stores/useVerificationStore";
 
 export default function Signup() {
   const theme = useTheme();
   const router = useRouter();
-
+  const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const strength = checkPasswordStrength(password);
   const isStrongPassword = strength.label === "Strong";
 
+  const setPendingEmail = useVerificationStore(
+    (state) => state.setPendingEmail,
+  );
+
   const handleSignup = async () => {
-    if (!email || !password) {
+    if (!userName || !email || !password || !confirmPassword) {
       showToast.error("Missing fields", "Please fill all inputs");
       return;
     }
@@ -31,21 +45,30 @@ export default function Signup() {
       return;
     }
 
+    if (password !== confirmPassword && password !== "") {
+      showToast.error("Passwords do not match, Please confirm password");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      await signUp(email, password);
+      await signUp(userName, email, password);
+
+      setPendingEmail(email);
 
       showToast.success(
         "Account created",
         "Check your email for verification code",
       );
 
-      // 🔥 CORRECT FLOW: go to OTP verification
-      router.replace({
-        pathname: "./signup.tsx",
-        params: { email },
-      });
+      Keyboard.dismiss();
+      setTimeout(() => {
+        router.replace({
+          pathname: "/(auth)/verifyPincode",
+          params: { email },
+        });
+      }, 300);
     } catch (e: any) {
       showToast.error("Signup failed", e.message);
     } finally {
@@ -82,6 +105,23 @@ export default function Signup() {
         }}
       >
         <TextInput
+          placeholder="Name"
+          placeholderTextColor={theme.subtext}
+          value={userName}
+          onChangeText={setUserName}
+          autoCapitalize="words"
+          style={{
+            backgroundColor: theme.inputBg,
+            borderRadius: 12,
+            padding: 14,
+            color: theme.text,
+            marginBottom: 16,
+            borderWidth: 1,
+            borderColor: theme.border,
+          }}
+        />
+
+        <TextInput
           placeholder="Email"
           placeholderTextColor={theme.subtext}
           value={email}
@@ -104,7 +144,43 @@ export default function Signup() {
             placeholderTextColor={theme.subtext}
             secureTextEntry={!showPassword}
             value={password}
+            textContentType="newPassword"
+            autoComplete="password-new"
             onChangeText={setPassword}
+            style={{
+              backgroundColor: theme.inputBg,
+              borderRadius: 12,
+              padding: 14,
+              color: theme.text,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          />
+
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              right: 15,
+              top: "50%",
+              transform: [{ translateY: -10 }],
+            }}
+          >
+            <PwdVisibility
+              visible={showPassword}
+              onToggle={() => setShowPassword((prev) => !prev)}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ position: "relative", marginBottom: 16 }}>
+          <TextInput
+            placeholder="Confirm Password"
+            placeholderTextColor={theme.subtext}
+            secureTextEntry={!showPassword}
+            textContentType="newPassword"
+            autoComplete="password-new"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
             style={{
               backgroundColor: theme.inputBg,
               borderRadius: 12,
@@ -147,12 +223,23 @@ export default function Signup() {
           </Text>
         )}
 
-        {/* SIGNUP BUTTON */}
+        {confirmPassword.length > 0 && password !== confirmPassword && (
+          <Text
+            style={{
+              color: "red",
+              fontSize: 12,
+              marginBottom: 10,
+            }}
+          >
+            Passwords Do Not Match
+          </Text>
+        )}
+
         <TouchableOpacity
           onPress={handleSignup}
           disabled={loading || !isStrongPassword}
           style={{
-            opacity: loading || !isStrongPassword ? 0.4 : 1,
+            opacity: loading || !isStrongPassword ? 0.7 : 1,
           }}
         >
           <LinearGradient
@@ -161,7 +248,7 @@ export default function Signup() {
               padding: 14,
               borderRadius: 12,
               alignItems: "center",
-              opacity: loading ? 0.6 : 1,
+              opacity: loading ? 0.7 : 1,
             }}
           >
             <Text style={{ color: theme.text, fontWeight: "600" }}>
@@ -170,7 +257,17 @@ export default function Signup() {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* FIXED UX TEXT (NOT BROKEN NAVIGATION) */}
+        <Text
+          style={{
+            textAlign: "center",
+            color: theme.subtext,
+            marginVertical: 16,
+          }}
+        >
+          — OR —
+        </Text>
+        <SocialsBtn />
+
         <TouchableOpacity
           onPress={() => router.replace("/(auth)/login")}
           style={{ marginTop: 20 }}

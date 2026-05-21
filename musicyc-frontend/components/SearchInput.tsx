@@ -24,9 +24,6 @@ export default function SearchInput() {
         alignItems: "center",
         gap: 10,
         padding: 10,
-        backgroundColor: theme.card,
-        borderColor: theme.border,
-        borderWidth: 1,
         borderRadius: 12,
       }}
     >
@@ -44,7 +41,7 @@ export default function SearchInput() {
           borderWidth: 1,
 
           borderRadius: 16,
-          paddingHorizontal: 12,
+          paddingHorizontal: 14,
           paddingVertical: 8,
           flex: 1,
           shadowColor: "#000",
@@ -54,6 +51,7 @@ export default function SearchInput() {
           elevation: 2,
           borderColor: theme.border,
           color: theme.text,
+          backgroundColor: theme.card,
         }}
       />
       <TouchableOpacity

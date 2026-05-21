@@ -114,7 +114,7 @@ const LoginForm = () => {
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
           <Checkbox
-            style={{ width: 16, height: 16, borderColor: theme.border }}
+            style={{ width: 16, height: 16, borderColor: theme.subtext }}
             value={isChecked}
             onValueChange={setChecked}
             color={isChecked ? "#4630EB" : undefined}
@@ -152,15 +152,7 @@ const LoginForm = () => {
         </LinearGradient>
       </TouchableOpacity>
 
-      <Text
-        style={{
-          textAlign: "center",
-          color: theme.subtext,
-          marginVertical: 16,
-        }}
-      >
-        — OR —
-      </Text>
+      
     </>
   );
 };

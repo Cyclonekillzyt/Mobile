@@ -16,16 +16,19 @@ type SearchStore = {
   query: string;
   results: Song[];
   loading: boolean;
-  
+  online: boolean;
+
   setQuery: (query: string) => void;
   setResults: (results: Song[]) => void;
   setLoading: (loading: boolean) => void;
+  setOnline: (online: boolean) => void;
 };
 
 export const useSearchStore = create<SearchStore>((set) => ({
   query: "",
   results: [],
   loading: false,
+  online : true,
   
 
   setQuery: (query) => set({ query }),
@@ -34,5 +37,5 @@ export const useSearchStore = create<SearchStore>((set) => ({
 
   setLoading: (loading) => set({ loading }),
 
- 
+  setOnline : (online) => set({online})
 }));

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { getStreamUrl } from "@/lib/api/streamApi";
 import { usePlayerStore } from "@/stores/playerStore";
@@ -6,18 +6,53 @@ import { usePlayerStore } from "@/stores/playerStore";
 export const usePlayerControls = () => {
   const song = usePlayerStore((s) => s.currentSong);
 
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const setProgress = usePlayerStore((s) => s.setProgress);
+  const setDuration = usePlayerStore((s) => s.setDuration);
+  const setIsPlaying = usePlayerStore((s) => s.setIsPlaying);
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
   const [isLoading, setIsLoading] = useState(false);
+  const repeatMode = usePlayerStore((s) => s.repeatMode);
+  const isShuffled = usePlayerStore((s) => s.isShuffled);
 
-  const audioSource = useMemo(
-    () => (song ? getStreamUrl(song.videoId) : undefined),
-    [song?.videoId],
+  const setRepeatMode = usePlayerStore((s) => s.setRepeatMode);
+  const setShuffle = usePlayerStore((s) => s.setShuffle);
+
+  const player = useAudioPlayer(
+    useMemo(
+      () => (song ? getStreamUrl(song.videoId) : undefined),
+      [song?.videoId],
+    ),
   );
 
-  const player = useAudioPlayer(audioSource);
+
+  
+
+  const handleSeek = async (ms: number) => {
+    if (!player) return;
+
+    const shouldResume = isPlaying;
+
+    try {
+      player.pause();
+      console.log(player)
+      await player.seekTo(ms / 1000);
+      console.log(player);
+
+      if (shouldResume) {
+         player.play();
+      }
+    } catch (e) {
+      console.log("seek error:", e);
+    }
+    console.log("seek requested:", ms / 1000);
+    console.log(player);
+    setTimeout(() => {
+      console.log("after seek currentTime:", player.currentTime);
+    }, 500);
+  };
+
+  const endedRef = useRef(false);
 
   useEffect(() => {
     setAudioModeAsync({
@@ -28,22 +63,30 @@ export const usePlayerControls = () => {
   }, []);
 
   useEffect(() => {
-    setIsPlaying(false);
     setProgress(0);
     setDuration(0);
+    setIsPlaying(false);
+    endedRef.current = false;
   }, [song?.videoId]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const current = (player as any)?.currentTime ?? 0;
-      const dur = song?.duration ?? 0;
+    if (!player) return;
 
-      setProgress(current * 1000);
-      setDuration(dur * 1000);
-    }, 500);
+    const sub = player.addListener?.("playbackStatusUpdate", (status: any) => {
+      if (!status?.isLoaded) return;
 
-    return () => clearInterval(interval);
-  }, [player, song]);
+      setProgress((status.currentTime ?? 0) * 1000);
+      setDuration((status.duration ?? 0) * 1000);
+      setIsPlaying(status.playing ?? false);
+
+    
+      if (status.didJustFinish) {
+        endedRef.current = true;
+      }
+    });
+
+    return () => sub?.remove?.();
+  }, [player]);
 
   const handlePlay = async () => {
     if (!song || !player) return;
@@ -60,25 +103,28 @@ export const usePlayerControls = () => {
         });
       }
 
+      if (endedRef.current) {
+        await player.seekTo(0);
+        endedRef.current = false;
+      }
+
       await player.play();
-      setIsPlaying(true);
     } catch (e) {
       console.log("play error:", e);
-      setIsPlaying(false);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handlePause = async () => {
+    console.log("pause");
     await player.pause();
-    setIsPlaying(false);
+    console.log(player)
   };
 
   const handleStop = async () => {
     await player.pause();
-    setIsPlaying(false);
-    setProgress(0);
+    await player.seekTo(0);
   };
 
   const handleToggle = async () => {
@@ -95,7 +141,6 @@ export const usePlayerControls = () => {
     handlePause,
     handleStop,
     handleToggle,
-    progress,
-    duration,
+    handleSeek,
   };
 };

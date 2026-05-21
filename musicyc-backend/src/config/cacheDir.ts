@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const CACHE_DIR = path.join(__dirname, "..", "cache", "audio");
+export const CACHE_DIR = path.join(__dirname, "..", "..", "cache", "audio");
 
 if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });

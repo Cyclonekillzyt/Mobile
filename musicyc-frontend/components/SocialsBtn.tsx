@@ -1,4 +1,4 @@
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { ComponentProps } from "react";
 import { handleSocialsLogin } from "@/lib/api/supabase";
@@ -13,7 +13,38 @@ type Props = {
   icon: IconName;
 };
 
-const SocialsBtn = ({ provider, icon }: Props) => {
+const SocialsBtn = () => {
+  const providers: {
+    provider: string;
+    icon: ComponentProps<typeof Ionicons>["name"];
+  }[] = [
+    { provider: "google", icon: "logo-google" },
+    { provider: "facebook", icon: "logo-facebook" },
+    { provider: "github", icon: "logo-github" },
+  ];
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "center",
+        gap: 16,
+        marginTop: 20,
+      }}
+    >
+      {providers.map((item) => (
+        <CreateButton
+          key={item.provider}
+          provider={item.provider}
+          icon={item.icon}
+        />
+      ))}
+    </View>
+  );
+};
+
+export default SocialsBtn;
+
+function CreateButton({ provider, icon }: Props) {
   const theme = useTheme();
   return (
     <TouchableOpacity
@@ -36,6 +67,6 @@ const SocialsBtn = ({ provider, icon }: Props) => {
       <Ionicons name={icon} size={36} color={theme.text} />
     </TouchableOpacity>
   );
-};
+}
 
-export default SocialsBtn;
+/* */

@@ -1,11 +1,10 @@
-import { View, Text, TextInput , TouchableOpacity} from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { showToast } from "@/utils/toast";
 import { supabase } from "@/lib/api/supabase";
 import { useRouter, useLocalSearchParams } from "expo-router";
-
-
+import { useVerificationStore } from "@/stores/useVerificationStore";
 
 export default function VerifyPincode() {
   const theme = useTheme();
@@ -15,7 +14,22 @@ export default function VerifyPincode() {
 
   const router = useRouter();
   const { email } = useLocalSearchParams();
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(60);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+
+    const timer = setTimeout(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const clearPendingEmail = useVerificationStore(
+    (state) => state.clearPendingEmail,
+  );
 
   const handleVerify = async () => {
     const otp = code.join("");
@@ -34,7 +48,9 @@ export default function VerifyPincode() {
         type: "email",
       });
 
+      console.log(data);
       if (error) throw error;
+      clearPendingEmail();
 
       showToast.success("Verified", "Account activated");
 
@@ -61,6 +77,25 @@ export default function VerifyPincode() {
   const handleBackspace = (text: string, index: number) => {
     if (!text && index > 0) {
       inputs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) return;
+
+    try {
+      setResendCooldown(60);
+
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email as string,
+      });
+
+      if (error) throw error;
+
+      showToast.success("Code sent", "Check your email");
+    } catch (e: any) {
+      showToast.error("Failed to resend", e.message);
     }
   };
 
@@ -92,7 +127,8 @@ export default function VerifyPincode() {
           marginBottom: 30,
         }}
       >
-        Enter the 6-digit code sent to you
+        Enter the 6-digit code sent to{"\n"}
+        <Text style={{ color: theme.text }}>{email}</Text>
       </Text>
 
       <View
@@ -114,6 +150,12 @@ export default function VerifyPincode() {
                 handleBackspace(digit, index);
               }
             }}
+            autoCorrect={false}
+            autoCapitalize="none"
+            textContentType="oneTimeCode"
+            autoComplete="sms-otp"
+            passwordRules={undefined}
+            secureTextEntry={false}
             maxLength={1}
             keyboardType="number-pad"
             style={{
@@ -141,6 +183,42 @@ export default function VerifyPincode() {
           }}
         >
           {loading ? "Verifying..." : "Verify Code"}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          clearPendingEmail();
+
+          router.replace("/(auth)/signup");
+        }}
+      >
+        <Text
+          style={{
+            textAlign: "center",
+            color: theme.subtext,
+            marginTop: 16,
+          }}
+        >
+          Wrong email? Change it
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => router.back()}
+        style={{
+          position: "absolute",
+          top: 60,
+          left: 20,
+        }}
+      >
+        <Text
+          style={{
+            color: theme.primary,
+            fontSize: 16,
+          }}
+        >
+          ← Back
         </Text>
       </TouchableOpacity>
     </View>

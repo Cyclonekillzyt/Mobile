@@ -16,13 +16,16 @@ export async function handleDownloadRequest(req: Request, res: Response) {
     console.log(cachedPath, "donwloadControllers");
 
     if (isFileCached(videoId)) {
-      console.log(`Cache hit: ${videoId}`);
-      res.setHeader("Content-Disposition", "attachment; filename=audio.mp3");
-      res.setHeader("Content-Type", "audio/mpeg");
-      if (cachedPath && fs.existsSync(cachedPath))
-        fs.createReadStream(cachedPath).pipe(res);
+      if (cachedPath && fs.existsSync(cachedPath)) {
+        const filename = cachedPath.split("/").pop();
 
-      return;
+        const audioUrl = `${req.protocol}://${req.get("host")}/cache/${filename}`;
+
+        return res.json({
+          success: true,
+          audioUrl,
+        });
+      }
     }
 
     const userId = req.user?.id;

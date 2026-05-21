@@ -41,9 +41,9 @@ audioQueue.process(async (job) => {
 
   console.log(`Downloading ${type} for ${videoId}...`);
 
-  await downloadAudio(`https://www.youtube.com/watch?v=${videoId}`, filePath);
+  await downloadAudio(`https://www.youtube.com/watch?v=${videoId}`, filePath!);
 
-  await markSongCached(videoId, filePath);
+  await markSongCached(videoId, filePath!);
   
   if (userId) {
     await incrementDownloadUsage(userId);

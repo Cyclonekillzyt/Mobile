@@ -42,3 +42,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# cached audio
+src/cache/audio/*
+!src/cache/audio/.temp

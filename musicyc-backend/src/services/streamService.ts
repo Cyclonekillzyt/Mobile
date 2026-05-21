@@ -9,6 +9,8 @@ const activeStreams = new Map<string, Promise<void>>();
 export async function createAudioStream(videoId: string) {
   const cachedPath = getCachedFilePath(videoId);
 
+  console.log("starting stream");
+
   if (cachedPath) {
     return fs.createReadStream(cachedPath);
   }
@@ -24,9 +26,15 @@ export async function createAudioStream(videoId: string) {
 
   const streamPromise = new Promise<void>((resolve, reject) => {
     const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+    console.log("started");
+
     const process = runYtDlp([
       "-f",
       "ba[ext=m4a]/ba[acodec^=mp3]/ba/b",
+      "--embed-metadata",
+      "--embed-thumbnail",
+      "--newline",
       "--no-playlist",
       "-o",
       path.join(temp, "%(id)s.%(ext)s"),
@@ -34,6 +42,16 @@ export async function createAudioStream(videoId: string) {
     ]);
 
     process.stderr.on("data", (d) => console.error(d.toString()));
+
+    process.stderr.on("data", (d) => {
+      const line = d.toString();
+
+      console.log("[yt-dlp]", line);
+
+      if (line.includes("%")) {
+        console.log("PROGRESS:", line);
+      }
+    });
 
     process.on("close", (code) => {
       activeStreams.delete(videoId);

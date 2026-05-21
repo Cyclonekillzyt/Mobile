@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import SocialsBtn from "@/components/SocialsBtn";
 import { Ionicons } from "@expo/vector-icons";
 import LoginForm from "@/components/LoginForm";
+import Logo from "@/components/Logo";
 
 
 export default function Login() {
@@ -12,14 +13,6 @@ export default function Login() {
 
   const router = useRouter();
 
-  const providers: {
-    provider: string;
-    icon: ComponentProps<typeof Ionicons>["name"];
-  }[] = [
-    { provider: "google", icon: "logo-google" },
-    { provider: "facebook", icon: "logo-facebook" },
-    { provider: "github", icon: "logo-github" },
-  ];
 
   return (
     <View
@@ -30,32 +23,7 @@ export default function Login() {
         backgroundColor: theme.auth,
       }}
     >
-      <View
-        style={{
-          alignItems: "center",
-          marginBottom: 30,
-          flexDirection: "row",
-          justifyContent: "center",
-        }}
-      >
-        <Image
-          source={require("@/assets/images/logo.png")}
-          style={{ width: 80, height: 80 }}
-          resizeMode="contain"
-        />
-
-        <Text
-          style={{
-            color: theme.text,
-            fontSize: 28,
-            fontWeight: "900",
-            marginTop: 10,
-          }}
-        >
-          usicyc
-        </Text>
-      </View>
-
+      <Logo />
       <View
         style={{
           backgroundColor: theme.auth,
@@ -64,22 +32,16 @@ export default function Login() {
         }}
       >
         <LoginForm />
-        <View
+        <Text
           style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 16,
-            marginTop: 20,
+            textAlign: "center",
+            color: theme.subtext,
+            marginVertical: 16,
           }}
         >
-          {providers.map((item) => (
-            <SocialsBtn
-              key={item.provider}
-              provider={item.provider}
-              icon={item.icon}
-            />
-          ))}
-        </View>
+          — OR —
+        </Text>
+        <SocialsBtn/>
 
         <TouchableOpacity
           onPress={() => router.push("./signup")}
