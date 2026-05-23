@@ -20,7 +20,7 @@ const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const SongControls = () => {
   const theme = useTheme();
 
-  const { song, isPlaying, handleToggle, handlePlay, handlePause } =
+  const { song, isPlaying, handleToggle } =
     usePlayerControls();
   
   

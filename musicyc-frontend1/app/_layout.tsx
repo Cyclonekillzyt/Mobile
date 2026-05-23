@@ -11,6 +11,7 @@ import Toast from "react-native-toast-message";
 import { useVerificationStore } from "@/stores/useVerificationStore";
 import { supabase } from "@/lib/api/supabase";
 import { setupStorage } from "@/utils/Storage";
+import { setupTrackPlayer } from "@/lib/trackPlayer";
 
 
 
@@ -24,6 +25,7 @@ export default function RootLayout() {
   useEffect(() => {
     initAuth();
     setupStorage();
+    setupTrackPlayer()
   }, []);
 
   useEffect(() => {
