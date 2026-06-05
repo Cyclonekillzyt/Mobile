@@ -1,6 +1,5 @@
 import { google } from "googleapis";
 
-
 export async function searchYouTube(query: string) {
   if (!process.env.YT) {
     console.log(process.env.PORT);
