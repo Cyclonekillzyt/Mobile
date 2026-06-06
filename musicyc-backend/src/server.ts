@@ -1,4 +1,6 @@
 import dotenv from "dotenv";
+
+
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
@@ -33,10 +35,8 @@ app.use("/api", streamRoutes);
 
 app.use("/cache", express.static("cache/audio"));
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "server running",
-  });
+app.get("/health", (req: Request, res: Response) => {
+  res.json({ status: "server running" });
 });
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
