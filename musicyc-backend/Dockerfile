@@ -1,14 +1,9 @@
 FROM node:20
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
   ffmpeg \
-  curl \
-  python3 \
-  python3-pip
-
-# Install yt-dlp
-RUN pip3 install yt-dlp
+  yt-dlp \
+  curl
 
 WORKDIR /app
 
