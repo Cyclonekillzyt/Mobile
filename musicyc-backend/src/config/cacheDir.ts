@@ -13,14 +13,11 @@ if (!fs.existsSync(CACHE_DIR)) {
 
 export const temp = path.join(CACHE_DIR, ".temp");
 
-
-
 if (!fs.existsSync(temp)) {
   fs.mkdirSync(temp, { recursive: true });
 }
 
-
-export const getCachedFile = (videoId: string) =>{
+export const getCachedFile = (videoId: string) => {
   const files = fs.readdirSync(CACHE_DIR);
   return files.find((f) => f.startsWith(videoId));
 };
@@ -32,4 +29,3 @@ export const getCachedFilePath = (videoId: string) => {
 };
 
 export const isFileCached = (videoId: string) => !!getCachedFile(videoId);
-

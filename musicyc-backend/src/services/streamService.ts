@@ -3,25 +3,35 @@ import fs from "fs";
 import path from "path";
 import { getCachedFilePath, CACHE_DIR, temp } from "../config/cacheDir.js";
 import { runFfmpeg } from "../utils/ffmpeg.js";
+import { getCachedUrl } from "./supabaseCacheService.js";
+import { uploadToCache } from "./supabaseCacheService.js";
 
 const activeStreams = new Map<string, Promise<void>>();
+type StreamResult =
+  | { type: "local"; path: string }
+  | { type: "remote"; url: string };
 
 export async function createAudioStream(videoId: string) {
-  const cachedPath = getCachedFilePath(videoId);
+  const existing = getCachedFilePath(videoId);
+
+  if (existing) {
+    return { type: "local", path: existing };
+  }
+  const cachedUrl = await getCachedUrl(videoId);
 
   console.log("starting stream");
 
-  if (cachedPath) {
-    return fs.createReadStream(cachedPath);
+  if (cachedUrl) {
+    return { type: "remote", url: cachedUrl };
   }
 
   if (activeStreams.has(videoId)) {
     await activeStreams.get(videoId);
 
-    const cachedPath = getCachedFilePath(videoId);
-    if (!cachedPath) throw new Error("File missing after processing");
+    const cacheUrl = await getCachedUrl(videoId);
+    if (!cacheUrl) throw new Error("File missing after processing");
 
-    return fs.createReadStream(cachedPath);
+    return { type: "remote", url: cachedUrl };
   }
 
   const streamPromise = new Promise<void>((resolve, reject) => {
@@ -101,5 +111,15 @@ export async function createAudioStream(videoId: string) {
     fs.renameSync(tempPath, finalPath);
   }
 
-  return fs.createReadStream(finalPath);
+  uploadToCache(videoId, finalPath).catch(console.error);
+
+  setTimeout(
+    () => {
+      fs.unlink(finalPath, (err) => {
+        if (err) console.error("Cache delete failed:", err);
+      });
+    },
+    10 * 60 * 1000,
+  );
+  return { type: "local", path: finalPath };
 }

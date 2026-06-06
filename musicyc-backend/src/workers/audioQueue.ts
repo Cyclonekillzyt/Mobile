@@ -30,7 +30,7 @@ audioQueue.on("ready", () => {
   console.log("Connected to Redis");
 });
 
-audioQueue.process(async (job) => {
+audioQueue.process(2,async (job) => {
   const { videoId, type, userId } = job.data;
   const filePath = getCachedFilePath(videoId);
 

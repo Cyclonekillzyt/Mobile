@@ -1,10 +1,13 @@
-
 import dotenv from "dotenv";
 dotenv.config();
 
 import "./startup/validateEnv.js";
 
-import express, { type Request, type Response, type NextFunction } from "express";
+import express, {
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";

@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import fs from "fs";
 import { addAudioJob } from "../workers/audioQueue.js";
 import { getCachedFilePath, isFileCached } from "../config/cacheDir.js";
+import { getCachedUrl } from "../services/supabaseCacheService.js";
 
 export async function handleDownloadRequest(req: Request, res: Response) {
   const { videoId, type = "download" } = req.body;
@@ -11,6 +12,24 @@ export async function handleDownloadRequest(req: Request, res: Response) {
   }
 
   try {
+     const userId = req.user?.id;
+
+     if (!userId) {
+       return res.status(401).json({ message: "User not authenticated" });
+     }
+
+
+     const cachedUrl = await getCachedUrl(videoId);
+
+     if (cachedUrl) {
+       return res.json({
+         success: true,
+         source: "supabase",
+         audioUrl: cachedUrl,
+       });
+     }
+
+     
     const cachedPath = getCachedFilePath(videoId);
 
     console.log(cachedPath, "donwloadControllers");
@@ -28,11 +47,7 @@ export async function handleDownloadRequest(req: Request, res: Response) {
       }
     }
 
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
+   
 
     console.log(`Cache miss: ${videoId}, adding to queue...`);
 
